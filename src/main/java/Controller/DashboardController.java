@@ -106,13 +106,6 @@ public class DashboardController implements Initializable {
         }
     }
 
-    private void showAlert(String title, String message, Alert.AlertType type) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
 
     private void setActiveButton(Button activeButton) {
         dashboardButton.setStyle("-fx-background-color: transparent;");
@@ -122,4 +115,12 @@ public class DashboardController implements Initializable {
 
         activeButton.setStyle("-fx-background-color: #e0e0e0;");
     }
+    private void showAlert(String title, String message, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
 }

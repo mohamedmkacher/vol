@@ -2,6 +2,7 @@ package Controller;
 
 import Classes.*;
 import DAO.*;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -15,18 +16,29 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class VolController {
+    @FXML private TableColumn<Vol, LocalDate> departureDateColumn;
+    @FXML private TableColumn<Vol, LocalTime> departureTimeColumn;
+    @FXML private TableColumn<Vol, LocalDate> arrivalDateColumn;
+    @FXML private TableColumn<Vol, LocalTime> arrivalTimeColumn;
     @FXML private Label userNameLabel;
+    @FXML private Button logoutButton;
+    @FXML private Button dashboardButton;
+    @FXML private Button flightsButton;
+    @FXML private Button aircraftButton;
+    @FXML private Button crewButton;
     @FXML private TabPane flightCreationTabPane;
     @FXML private Tab assignationsTab;
     @FXML private TextField flightNumberField;
@@ -47,8 +59,7 @@ public class VolController {
     @FXML private TableColumn<Vol, String> flightNumberColumn;
     @FXML private TableColumn<Vol, String> originColumn;
     @FXML private TableColumn<Vol, String> destinationColumn;
-    @FXML private TableColumn<Vol, LocalDateTime> departureDateColumn;
-    @FXML private TableColumn<Vol, LocalDateTime> arrivalDateColumn;
+
     @FXML private TableColumn<Vol, String> flightTypeColumn;
 
     private ObservableList<Vol> flightData = FXCollections.observableArrayList();
@@ -83,6 +94,9 @@ public class VolController {
 
         configureTableColumns();
         initializeFilters();
+
+        setColumnHeaders();
+
         loadFlights();
     }
 
@@ -91,9 +105,80 @@ public class VolController {
         flightNumberColumn.setCellValueFactory(new PropertyValueFactory<>("numero_vol"));
         originColumn.setCellValueFactory(new PropertyValueFactory<>("provenance"));
         destinationColumn.setCellValueFactory(new PropertyValueFactory<>("destination"));
-        departureDateColumn.setCellValueFactory(new PropertyValueFactory<>("date_heure_depart"));
-        arrivalDateColumn.setCellValueFactory(new PropertyValueFactory<>("date_heure_arrivee"));
+
+        // Configuration des colonnes de date et heure de départ
+        departureDateColumn.setCellValueFactory(cellData -> {
+            LocalDateTime dateTime = cellData.getValue().getDate_heure_depart();
+            return new SimpleObjectProperty<>(dateTime.toLocalDate());
+        });
+        departureDateColumn.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                if (empty || date == null) {
+                    setText(null);
+                } else {
+                    setText(date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                }
+            }
+        });
+
+        departureTimeColumn.setCellValueFactory(cellData -> {
+            LocalDateTime dateTime = cellData.getValue().getDate_heure_depart();
+            return new SimpleObjectProperty<>(dateTime.toLocalTime());
+        });
+        departureTimeColumn.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(LocalTime time, boolean empty) {
+                super.updateItem(time, empty);
+                if (empty || time == null) {
+                    setText(null);
+                } else {
+                    setText(time.format(DateTimeFormatter.ofPattern("HH:mm")));
+                }
+            }
+        });
+
+        // Configuration des colonnes de date et heure d'arrivée
+        arrivalDateColumn.setCellValueFactory(cellData -> {
+            LocalDateTime dateTime = cellData.getValue().getDate_heure_arrivee();
+            return new SimpleObjectProperty<>(dateTime.toLocalDate());
+        });
+        arrivalDateColumn.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                if (empty || date == null) {
+                    setText(null);
+                } else {
+                    setText(date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                }
+            }
+        });
+
+        arrivalTimeColumn.setCellValueFactory(cellData -> {
+            LocalDateTime dateTime = cellData.getValue().getDate_heure_arrivee();
+            return new SimpleObjectProperty<>(dateTime.toLocalTime());
+        });
+        arrivalTimeColumn.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(LocalTime time, boolean empty) {
+                super.updateItem(time, empty);
+                if (empty || time == null) {
+                    setText(null);
+                } else {
+                    setText(time.format(DateTimeFormatter.ofPattern("HH:mm")));
+                }
+            }
+        });
+
         flightTypeColumn.setCellValueFactory(new PropertyValueFactory<>("type_trajet"));
+    }
+    private void setColumnHeaders() {
+        departureDateColumn.setText("Date de départ");
+        departureTimeColumn.setText("Heure de départ");
+        arrivalDateColumn.setText("Date d'arrivée");
+        arrivalTimeColumn.setText("Heure d'arrivée");
     }
 
     private void loadFlights() {
@@ -368,5 +453,98 @@ public class VolController {
             System.out.println("Validation failed for flight details.");
         }
     }
+
+    @FXML
+    private void handleLogout(ActionEvent event) {
+        try {
+            // Afficher une confirmation avant la déconnexion
+            Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmAlert.setTitle("Confirmation de déconnexion");
+            confirmAlert.setHeaderText(null);
+            confirmAlert.setContentText("Êtes-vous sûr de vouloir vous déconnecter ?");
+
+            Optional<ButtonType> result = confirmAlert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                // Nettoyer les données de session si nécessaire
+                // Par exemple : userNameLabel.setText("");
+
+                // Charger la vue de login
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/gestionvoltunisair/login.fxml"));
+                Parent loginView = loader.load();
+
+                // Obtenir la scène actuelle
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+                // Définir la nouvelle scène
+                Scene scene = new Scene(loginView);
+                stage.setScene(scene);
+                stage.show();
+            }
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de la déconnexion: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleDashboard(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/gestionvoltunisair/dashboard.fxml"));
+            Parent dashboardView = loader.load();
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            Scene scene = new Scene(dashboardView);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors du chargement du tableau de bord: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleFlights(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("//com/example/gestionvoltunisair/gestion-vols.fxml"));
+            Parent flightsView = loader.load();
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            Scene scene = new Scene(flightsView);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors du chargement des vols: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleAircraft(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/aircraft.fxml/com/example/gestionvoltunisair/gestion-avions.fxml"));
+            Parent aircraftView = loader.load();
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            Scene scene = new Scene(aircraftView);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors du chargement des avions: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleCrew(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/gestionvoltunisair/gestion-equipages.fxml"));
+            Parent crewView = loader.load();
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            Scene scene = new Scene(crewView);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors du chargement de l'équipage: " + e.getMessage());
+        }
+    }
+
+
 
 }
